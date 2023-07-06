@@ -26,13 +26,10 @@ port(
 
     -- external optical timing SFP link interface
 
-    cdr_sfp_los: in std_logic; -- loss of signal
-    cdr_sfp_tx_dis: out std_logic; -- high to disable timing SFP TX
-    cdr_sfp_tx_p, cdr_sfp_tx_n: out std_logic; -- send data upstream
-
-    -- external CDR chip interface: ignore CLKOUT, LOS, and LOL
-
-    adn2814_data_p, adn2814_data_n: in std_logic; -- LVDS recovered serial data ACKCHYUALLY the clock!
+    sfp_tmg_los: in std_logic; -- loss of signal
+    rx0_tmg_p, rx0_tmg_n: in std_logic; -- LVDS recovered serial data ACKCHYUALLY the clock!
+    sfp_tmg_tx_dis: out std_logic; -- high to disable timing SFP TX
+    tx0_tmg_p, tx0_tmg_n: out std_logic; -- send data upstream
 
     -- timing endpoint interface 
 
@@ -85,10 +82,9 @@ signal mmcm0_clkout2: std_logic;
 signal local_clk62p5: std_logic;
 signal sclk100_i: std_logic;
 
-signal adn2814_data: std_logic;
+signal rx0_tmg, tx0_tmg: std_logic;
 
 signal ep_clk62p5: std_logic;
-signal cdr_sfp_txd: std_logic;
 
 signal mmcm1_clkfbout, mmcm1_clkfbout_buf: std_logic;
 signal mmcm1_clkout1, mmcm1_clkout2: std_logic;
@@ -177,7 +173,7 @@ mmcm_clk2_inst:  BUFG port map( I => mmcm0_clkout2, O => sclk100_i);  -- system 
 
 cdr_data_inst: IBUFDS
 generic map( DIFF_TERM => TRUE, IBUF_LOW_PWR => FALSE, IOSTANDARD => "LVDS_25" )
-port map( I => adn2814_data_p, IB => adn2814_data_n, O  => adn2814_data );
+port map( I => rx0_tmg_p, IB => rx0_tmg_n, O  => rx0_tmg );
 
 -- new timing endpoint 2.0
 -- The external CDR chip is used but the CLKOUT output is ignored
@@ -189,10 +185,10 @@ pdts_endpoint_inst: pdts_endpoint_wrapper
 		sys_rst => ep_reset,
 		sys_stat => ep_stat,
         sys_addr => ep_addr,
-		los => cdr_sfp_los,
-		rxd => adn2814_data, -- NEW: get the modulated clock from the external CDR DATA output
-		txd => cdr_sfp_txd, 
-		txenb => cdr_sfp_tx_dis, -- Timing output enable (active low for SFP) (clk domain)
+		los => sfp_tmg_los,
+		rxd => rx0_tmg, -- NEW: get the modulated clock from the external CDR DATA output
+		txd => tx0_tmg, 
+		txenb => sfp_tmg_tx_dis, -- Timing output enable (active low for SFP) (clk domain)
 		clk => ep_clk62p5, -- output clock from endpoint 62.5MHz
 		rst => open, -- endpoint reset output not used here
 		ready => ep_ts_rdy,
@@ -203,7 +199,7 @@ pdts_endpoint_inst: pdts_endpoint_wrapper
 
 OBUFDS_inst: OBUFDS
 generic map(IOSTANDARD=>"LVDS_25")
-port map( I => cdr_sfp_txd, O => cdr_sfp_tx_p, OB => cdr_sfp_tx_n );
+port map( I => tx0_tmg, O => tx0_tmg_p, OB => tx0_tmg_n );
 
 -- MMCM1 chooses between local clock 62.5MHz or the endpoint clock 62.5MHz
 -- after switching be sure to reset this MMCM! From the selected clock generate

@@ -77,10 +77,10 @@ architecture kria_test_arch of kria_test is
     port(
         sysclk_p, sysclk_n: in std_logic; -- system clock LVDS 100MHz from local oscillator
         reset_async: in std_logic; -- from the PS side
-        cdr_sfp_los: in std_logic; -- loss of signal
-        cdr_sfp_tx_dis: out std_logic; -- high to disable timing SFP TX
-        cdr_sfp_tx_p, cdr_sfp_tx_n: out std_logic; -- send data upstream (optional)
-        adn2814_data_p, adn2814_data_n: in std_logic; -- LVDS recovered serial data 
+        sfp_tmg_los: in std_logic; -- loss of signal
+        sfp_tmg_tx_dis: out std_logic; -- high to disable timing SFP TX
+        tx0_tmg_p, tx0_tmg_n: out std_logic; -- send data upstream (optional)
+        rx0_tmg_p, rx0_tmg_n: in std_logic; -- LVDS recovered serial data 
         ep_reset: in std_logic; -- soft reset endpoint logic
         ep_ts_rdy: out std_logic; -- endpoint timestamp is good
         ep_stat: out std_logic_vector(3 downto 0); -- endpoint state bits
@@ -93,6 +93,25 @@ architecture kria_test_arch of kria_test is
         sclk200: out std_logic; -- system clock 200MHz
         timestamp: out std_logic_vector(63 downto 0) -- sync to mclk
     );
+    end component;
+
+    component sender is
+    port(
+        mclk: in std_logic; -- master clock 62.5MHz
+        reset: in std_logic;
+        timestamp: in std_logic_vector(63 downto 0);
+        gth_refclk0_p, gth_refclk0_n: in std_logic;  -- GTH quad refclk, 156.25MHz, LVDS
+        sfp_gth0_los: in std_logic; -- high = loss of optical signal, 3.3V logic
+        sfp_gth0_abs: in std_logic; -- high = sfp module absent, 3.3V logic
+        sfp_gth0_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
+        tx0_gth_p, tx0_gth_n: out std_logic; -- GTH CML
+        rx0_gth_p, rx0_gth_n: in std_logic; -- GTH CML
+        sfp_gth1_los: in std_logic; -- high = loss of optical signal, 3.3V logic
+        sfp_gth1_abs: in std_logic; -- high = sfp module absent, 3.3V logic
+        sfp_gth1_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
+        tx1_gth_p, tx1_gth_n: out std_logic; -- GTH CML
+        rx1_gth_p, rx1_gth_n: in std_logic -- GTH CML
+      );
     end component;
 
     signal reset_async: std_logic;
@@ -120,12 +139,12 @@ begin
         sysclk_p => sysclk_p,
         sysclk_n => sysclk_n,
         reset_async => reset_async,
-        cdr_sfp_los => sfp_tmg_los,
-        cdr_sfp_tx_dis => sfp_tmg_tx_dis,
-        cdr_sfp_tx_p => tx0_tmg_p, 
-        cdr_sfp_tx_n => tx0_tmg_n,
-        adn2814_data_p => rx0_tmg_p,
-        adn2814_data_n => rx0_tmg_n,
+        sfp_tmg_los => sfp_tmg_los,
+        sfp_tmg_tx_dis => sfp_tmg_tx_dis,
+        tx0_tmg_p => tx0_tmg_p, 
+        tx0_tmg_n => tx0_tmg_n,
+        rx0_tmg_p => rx0_tmg_p,
+        rx0_tmg_n => rx0_tmg_n,
         ep_reset => reset_ep,
         ep_addr => ep_addr,
         ep_ts_rdy => ep_ts_rdy,
@@ -161,7 +180,28 @@ begin
     -- has a real time stamp. placeholder for now, still need to figure out what 
     -- this custom IP block looks like. Developed by the Bristol (UK) guys.
 
-
+    sender_inst: sender
+    port map(
+        mclk => mclk,
+        reset => reset_async,
+        timestamp => timestamp,
+        gth_refclk0_p => gth_refclk0_p, -- 156.25MHz
+        gth_refclk0_n => gth_refclk0_n, 
+        sfp_gth0_los => sfp_gth0_los,
+        sfp_gth0_abs => sfp_gth0_abs,
+        sfp_gth0_tx_dis => sfp_gth0_tx_dis,
+        tx0_gth_p => tx0_gth_p,
+        tx0_gth_n => tx0_gth_n,
+        rx0_gth_p => rx0_gth_p,
+        rx0_gth_n => rx0_gth_n,
+        sfp_gth1_los => sfp_gth1_los,
+        sfp_gth1_abs => sfp_gth1_abs,
+        sfp_gth1_tx_dis => sfp_gth1_tx_dis,
+        tx1_gth_p => tx1_gth_p,
+        tx1_gth_n => tx1_gth_n,
+        rx1_gth_p => rx1_gth_p,
+        rx1_gth_n => rx1_gth_n
+      );
 
     -- I2C Master ------------------------------------------------------------
 
@@ -175,7 +215,8 @@ begin
     --  Clock Generator SI5332B
     --      This device is at address 106. We will need to write to this 
     --      device to configure it to generate the clock frequencies we 
-    --      need.
+    --      need: OUT1 = 100MHz LVDS, OUT3 = 156.25MHz LVDS
+    --      (OUT0 and OUT2 are not used)
     
     -- (is this another axi lite interface?)
     
