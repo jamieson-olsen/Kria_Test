@@ -21,11 +21,10 @@ entity sender is
 port(
 
     mclk: in std_logic; -- master clock 62.5MHz
-    reset: in std_logic;
-    timestamp: in std_logic_vector(63 downto 0);
+    reset: in std_logic;  -- async reset from PS
+    timestamp: in std_logic_vector(63 downto 0); -- sync to mclk
 
     gth_refclk0_p, gth_refclk0_n: in std_logic;  -- GTH quad refclk, 156.25MHz, LVDS
-    -- gth_refclk1_p, gth1_refclk1_n: in std_logic; -- optional secondary GTH refclk, LVDS
 
     sfp_gth0_los: in std_logic; -- high = loss of optical signal, 3.3V logic
     sfp_gth0_abs: in std_logic; -- high = sfp module absent, 3.3V logic

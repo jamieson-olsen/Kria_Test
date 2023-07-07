@@ -19,24 +19,24 @@ generic(version: std_logic_vector(27 downto 0) := X"1234567"); -- git commit num
 port(
 
     sysclk_p, sysclk_n: in std_logic; -- system clock LVDS 100MHz
-    -- clk625_p, clk625_n: in std_logic; -- system clock LVDS 62.5MHz not used here
+    --clk625_p, clk625_n: in std_logic; -- system clock LVDS 62.5MHz not used here
     
     -- Two GTH channels for 10G optical links to DAQ...
 
-    gth_refclk0_p, gth_refclk0_n: in std_logic;  -- GTH quad refclk, 156.25MHz, LVDS
-    gth_refclk1_p, gth1_refclk1_n: in std_logic; -- optional secondary GTH refclk, LVDS
+    --gth_refclk0_p, gth_refclk0_n: in std_logic;  -- GTH quad refclk, 156.25MHz, LVDS
+    --gth_refclk1_p, gth1_refclk1_n: in std_logic; -- optional secondary GTH refclk, LVDS
 
-    sfp_gth0_los: in std_logic; -- high = loss of optical signal, 3.3V logic
-    sfp_gth0_abs: in std_logic; -- high = sfp module absent, 3.3V logic
-    sfp_gth0_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
-    tx0_gth_p, tx0_gth_n: out std_logic; -- GTH CML
-    rx0_gth_p, rx0_gth_n: in std_logic; -- GTH CML
+    --sfp_gth0_los: in std_logic; -- high = loss of optical signal, 3.3V logic
+    --sfp_gth0_abs: in std_logic; -- high = sfp module absent, 3.3V logic
+    --sfp_gth0_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
+    --tx0_gth_p, tx0_gth_n: out std_logic; -- GTH CML
+    --rx0_gth_p, rx0_gth_n: in std_logic; -- GTH CML
 
-    sfp_gth1_los: in std_logic; -- high = loss of optical signal, 3.3V logic
-    sfp_gth1_abs: in std_logic; -- high = sfp module absent, 3.3V logic
-    sfp_gth1_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
-    tx1_gth_p, tx1_gth_n: out std_logic; -- GTH CML
-    rx1_gth_p, rx1_gth_n: in std_logic; -- GTH CML
+    --sfp_gth1_los: in std_logic; -- high = loss of optical signal, 3.3V logic
+    --sfp_gth1_abs: in std_logic; -- high = sfp module absent, 3.3V logic
+    --sfp_gth1_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
+    --tx1_gth_p, tx1_gth_n: out std_logic; -- GTH CML
+    --rx1_gth_p, rx1_gth_n: in std_logic; -- GTH CML
 
     -- Timing interface optical SFP (note: does not use MGT)
 
@@ -48,16 +48,16 @@ port(
 
     -- I2C master interface drives mux/buffer and clock generator, 3.3V logic
 
-    pl_sda: inout std_logic;
-    pl_scl: out std_logic;
-    pl_i2c_resetn: out std_logic;
+    --pl_sda: inout std_logic;
+    --pl_scl: out std_logic;
+    --pl_i2c_resetn: out std_logic;
 
     -- SPI master, two daisy chained DAC chips, 3.3V logic
 
-    dac_spi_din: in std_logic;    
-    dac_spi_sclk: out std_logic;
-    dac_spi_syncn: out std_logic;
-    dac_spi_ldacn: out std_logic;
+    --dac_spi_din: in std_logic;    
+    --dac_spi_sclk: out std_logic;
+    --dac_spi_syncn: out std_logic;
+    --dac_spi_ldacn: out std_logic;
 
     -- status LEDs, 3.3V logic, active LOW
 
@@ -95,24 +95,24 @@ architecture kria_test_arch of kria_test is
     );
     end component;
 
-    component sender is
-    port(
-        mclk: in std_logic; -- master clock 62.5MHz
-        reset: in std_logic;
-        timestamp: in std_logic_vector(63 downto 0);
-        gth_refclk0_p, gth_refclk0_n: in std_logic;  -- GTH quad refclk, 156.25MHz, LVDS
-        sfp_gth0_los: in std_logic; -- high = loss of optical signal, 3.3V logic
-        sfp_gth0_abs: in std_logic; -- high = sfp module absent, 3.3V logic
-        sfp_gth0_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
-        tx0_gth_p, tx0_gth_n: out std_logic; -- GTH CML
-        rx0_gth_p, rx0_gth_n: in std_logic; -- GTH CML
-        sfp_gth1_los: in std_logic; -- high = loss of optical signal, 3.3V logic
-        sfp_gth1_abs: in std_logic; -- high = sfp module absent, 3.3V logic
-        sfp_gth1_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
-        tx1_gth_p, tx1_gth_n: out std_logic; -- GTH CML
-        rx1_gth_p, rx1_gth_n: in std_logic -- GTH CML
-      );
-    end component;
+--    component sender is
+--    port(
+--        mclk: in std_logic; -- master clock 62.5MHz
+--        reset: in std_logic;
+--        timestamp: in std_logic_vector(63 downto 0);
+--        gth_refclk0_p, gth_refclk0_n: in std_logic;  -- GTH quad refclk, 156.25MHz, LVDS
+--        sfp_gth0_los: in std_logic; -- high = loss of optical signal, 3.3V logic
+--        sfp_gth0_abs: in std_logic; -- high = sfp module absent, 3.3V logic
+--        sfp_gth0_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
+--        tx0_gth_p, tx0_gth_n: out std_logic; -- GTH CML
+--        rx0_gth_p, rx0_gth_n: in std_logic; -- GTH CML
+--        sfp_gth1_los: in std_logic; -- high = loss of optical signal, 3.3V logic
+--        sfp_gth1_abs: in std_logic; -- high = sfp module absent, 3.3V logic
+--        sfp_gth1_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
+--        tx1_gth_p, tx1_gth_n: out std_logic; -- GTH CML
+--        rx1_gth_p, rx1_gth_n: in std_logic -- GTH CML
+--      );
+--    end component;
 
     signal reset_async: std_logic;
     signal reset_ep: std_logic;
@@ -170,7 +170,8 @@ begin
         --      sfp_tmg_los, sfp_tmg_abs
         --      sfp_gth0_los, sfp_gth0_abs
         --      sfp_gth1_los, sfp_gth1_abs
-        --      timestamp(63..0) 
+        --      timestamp(63..0)
+        --      git commit id (passed in as generic at build time)
 
 
     -- Fake Sender ------------------------------------------------------------
@@ -180,28 +181,28 @@ begin
     -- has a real time stamp. placeholder for now, still need to figure out what 
     -- this custom IP block looks like. Developed by the Bristol (UK) guys.
 
-    sender_inst: sender
-    port map(
-        mclk => mclk,
-        reset => reset_async,
-        timestamp => timestamp,
-        gth_refclk0_p => gth_refclk0_p, -- 156.25MHz
-        gth_refclk0_n => gth_refclk0_n, 
-        sfp_gth0_los => sfp_gth0_los,
-        sfp_gth0_abs => sfp_gth0_abs,
-        sfp_gth0_tx_dis => sfp_gth0_tx_dis,
-        tx0_gth_p => tx0_gth_p,
-        tx0_gth_n => tx0_gth_n,
-        rx0_gth_p => rx0_gth_p,
-        rx0_gth_n => rx0_gth_n,
-        sfp_gth1_los => sfp_gth1_los,
-        sfp_gth1_abs => sfp_gth1_abs,
-        sfp_gth1_tx_dis => sfp_gth1_tx_dis,
-        tx1_gth_p => tx1_gth_p,
-        tx1_gth_n => tx1_gth_n,
-        rx1_gth_p => rx1_gth_p,
-        rx1_gth_n => rx1_gth_n
-      );
+--    sender_inst: sender
+--    port map(
+--        mclk => mclk,
+--        reset => reset_async,
+--        timestamp => timestamp,
+--        gth_refclk0_p => gth_refclk0_p, -- 156.25MHz
+--        gth_refclk0_n => gth_refclk0_n, 
+--        sfp_gth0_los => sfp_gth0_los,
+--        sfp_gth0_abs => sfp_gth0_abs,
+--        sfp_gth0_tx_dis => sfp_gth0_tx_dis,
+--        tx0_gth_p => tx0_gth_p,
+--        tx0_gth_n => tx0_gth_n,
+--        rx0_gth_p => rx0_gth_p,
+--        rx0_gth_n => rx0_gth_n,
+--        sfp_gth1_los => sfp_gth1_los,
+--        sfp_gth1_abs => sfp_gth1_abs,
+--        sfp_gth1_tx_dis => sfp_gth1_tx_dis,
+--        tx1_gth_p => tx1_gth_p,
+--        tx1_gth_n => tx1_gth_n,
+--        rx1_gth_p => rx1_gth_p,
+--        rx1_gth_n => rx1_gth_n
+--      );
 
     -- I2C Master ------------------------------------------------------------
 
@@ -229,9 +230,9 @@ begin
     -- this SPI master is used to write to the DAC chips, which can generate
     -- eight analog voltages. this is optional for now.
 
-    dac_spi_sclk <= '0';
-    dac_spi_syncn <= '1';
-    dac_spi_ldacn <= '1';
+    --dac_spi_sclk <= '0';
+    --dac_spi_syncn <= '1';
+    --dac_spi_ldacn <= '1';
 
     -- LED Blinker ------------------------------------------------------------
 
