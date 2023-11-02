@@ -5,7 +5,7 @@
     "cell_name": "vio_0",
     "component_reference": "xilinx.com:ip:vio:3.0",
     "ip_revision": "23",
-    "gen_directory": "../../../../../../DAPHNE_V3_1E.gen/sources_1/bd/DAPHNE_V3_1E/ip/DAPHNE_V3_1E_vio_0_0",
+    "gen_directory": "c:DAPHNE_V3_1E.gen/sources_1/bd/DAPHNE_V3_1E/ip/DAPHNE_V3_1E_vio_0_0",
     "parameters": {
       "component_parameters": {
         "C_PROBE_OUT255_INIT_VAL": [ { "value": "0x0", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
@@ -1593,7 +1593,7 @@
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
         "IPREVISION": [ { "value": "23" } ],
         "MANAGED": [ { "value": "TRUE" } ],
-        "OUTPUTDIR": [ { "value": "../../../../../../DAPHNE_V3_1E.gen/sources_1/bd/DAPHNE_V3_1E/ip/DAPHNE_V3_1E_vio_0_0" } ],
+        "OUTPUTDIR": [ { "value": "c:DAPHNE_V3_1E.gen/sources_1/bd/DAPHNE_V3_1E/ip/DAPHNE_V3_1E_vio_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
         "SWVERSION": [ { "value": "2023.1" } ],

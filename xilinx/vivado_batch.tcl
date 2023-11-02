@@ -8,7 +8,7 @@
 set_param general.maxThreads 4
 set outputDir ./output
 file mkdir $outputDir
-set_part xck26-sfvs784-2LV
+set_part xck26-sfvc784-2LV-c
 
 # load the VHDL sources...
 
@@ -55,12 +55,12 @@ read_vhdl ../timing/endpoint.vhd
 read_vhdl ../kria_test.vhd
 
 # Load IP blocks xci files
-read_ip ../src/ip/DAPHNE_V3_1E_ila_0_0.xci
-read_ip ../src/ip/DAPHNE_V3_1E_vio_0_0.xci
-read_ip ../src/ip/DAPHNE_V3_1E_zynq_ultra_ps_e_0_0.xci
-
 set_property target_language VHDL [current_project]
-generate_target all [get_files ../src/ip/*.xci]
+read_ip ../ip/DAPHNE_V3_1E_ila_0_0.xci
+read_ip ../ip/DAPHNE_V3_1E_vio_0_0.xci
+read_ip ../ip/DAPHNE_V3_1E_zynq_ultra_ps_e_0_0.xci
+generate_target all [get_ips]
+synth_ip [get_ips]
 
 # Load general timing and placement constraints...
 
@@ -77,7 +77,7 @@ puts "INFO: passing git commit number $v_git_sha to top level generic"
 
 # synth design...
 
-synth_design -top daphne2 -generic version=$v_git_sha
+synth_design -top kria_test -generic version=$v_git_sha
 report_clocks -file $outputDir/clocks.rpt
 report_timing_summary -file $outputDir/post_synth_timing_summary.rpt
 report_power -file $outputDir/post_synth_power.rpt
