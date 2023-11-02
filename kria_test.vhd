@@ -15,11 +15,11 @@ use unimacro.vcomponents.all;
 use work.kria_test_package.all;
 
 entity kria_test is
-generic(version: std_logic_vector(27 downto 0) := X"1234567"); -- git commit number is passed in from tcl build script
-port(
+    generic(version: std_logic_vector(27 downto 0) := X"1234567"); -- git commit number is passed in from tcl build script
+    port (
 
     sysclk_p, sysclk_n: in std_logic; -- system clock LVDS 100MHz
-    --clk625_p, clk625_n: in std_logic; -- system clock LVDS 62.5MHz not used here
+    --clk625_p, clk625_n: in std_logic; -- the system clock LVDS 62.5MHz is not used
     
     -- Two GTH channels for 10G optical links to DAQ...
 
@@ -43,8 +43,8 @@ port(
     sfp_tmg_los: in std_logic; -- high = loss of optical signal
     sfp_tmg_abs: in std_logic; -- high = sfp module absent
     sfp_tmg_tx_dis: out std_logic; -- high to disable sfp transmitter
-    tx0_tmg_p, tx0_tmg_n: out std_logic; -- LVDS
-    rx0_tmg_p, rx0_tmg_n: in std_logic; -- LVDS
+    tx0_tmg_p, tx0_tmg_n: out std_logic; -- LVDS to the timing SFP
+    rx0_tmg_p, rx0_tmg_n: in std_logic; -- LVDS from the timing SFP, has external 100 ohm termination resistor
 
     -- I2C master interface drives mux/buffer and clock generator, 3.3V logic
 
@@ -59,68 +59,105 @@ port(
     --dac_spi_syncn: out std_logic;
     --dac_spi_ldacn: out std_logic;
 
-    -- status LEDs, 3.3V logic, active LOW
+    -- some status LEDs, 3.3V logic, active LOW
 
     pl_stat_led: out std_logic_vector(3 downto 0)
 
-    -- AXI lite inteface(s) to PS
-
-        -- signals TBD
-        -- can the PS supply a reset signal?
-
   );
+
+    attribute CORE_GENERATION_INFO : string;
+    attribute CORE_GENERATION_INFO of kria_test : entity is "DAPHNE_V3_1E,IP_Integrator,{x_ipVendor=xilinx.com,x_ipLibrary=BlockDiagram,x_ipName=DAPHNE_V3_1E,x_ipVersion=1.00.a,x_ipLanguage=VHDL,numBlks=4,numReposBlks=4,numNonXlnxBlks=0,numHierBlks=0,maxHierDepth=0,numSysgenBlks=0,numHlsBlks=0,numHdlrefBlks=1,numPkgbdBlks=0,bdsource=USER,da_zynq_ultra_ps_e_cnt=1,synth_mode=OOC_per_IP}";
+    attribute HW_HANDOFF : string;
+    attribute HW_HANDOFF of kria_test : entity is "DAPHNE_V3_1E.hwdef";
+
 end kria_test;
 
 architecture kria_test_arch of kria_test is
 
-    component endpoint
-    port(
-        sysclk_p, sysclk_n: in std_logic; -- system clock LVDS 100MHz from local oscillator
-        reset_async: in std_logic; -- from the PS side
-        sfp_tmg_los: in std_logic; -- loss of signal
-        sfp_tmg_tx_dis: out std_logic; -- high to disable timing SFP TX
-        tx0_tmg_p, tx0_tmg_n: out std_logic; -- send data upstream (optional)
-        rx0_tmg_p, rx0_tmg_n: in std_logic; -- LVDS recovered serial data 
-        ep_reset: in std_logic; -- soft reset endpoint logic
-        ep_ts_rdy: out std_logic; -- endpoint timestamp is good
-        ep_stat: out std_logic_vector(3 downto 0); -- endpoint state bits
-        ep_addr: in std_logic_vector(15 downto 0); 
-        mmcm1_reset: in std_logic;
-        mmcm1_locked: out std_logic;
-        mmcm0_locked: out std_logic;
-        use_ep: in std_logic; -- 0 = run on local clocks with fake timestamp, 1 = use endpoint clocks and real timestamp
-        mclk: out std_logic;  -- master clock 62.5MHz
-        sclk200: out std_logic; -- system clock 200MHz
-        timestamp: out std_logic_vector(63 downto 0) -- sync to mclk
-    );
-    end component;
+-- declare components
 
---    component sender is
---    port(
---        mclk: in std_logic; -- master clock 62.5MHz
---        reset: in std_logic;
---        timestamp: in std_logic_vector(63 downto 0);
---        gth_refclk0_p, gth_refclk0_n: in std_logic;  -- GTH quad refclk, 156.25MHz, LVDS
---        sfp_gth0_los: in std_logic; -- high = loss of optical signal, 3.3V logic
---        sfp_gth0_abs: in std_logic; -- high = sfp module absent, 3.3V logic
---        sfp_gth0_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
---        tx0_gth_p, tx0_gth_n: out std_logic; -- GTH CML
---        rx0_gth_p, rx0_gth_n: in std_logic; -- GTH CML
---        sfp_gth1_los: in std_logic; -- high = loss of optical signal, 3.3V logic
---        sfp_gth1_abs: in std_logic; -- high = sfp module absent, 3.3V logic
---        sfp_gth1_tx_dis: out std_logic; -- high to disable sfp transmitter, 3.3V logic
---        tx1_gth_p, tx1_gth_n: out std_logic; -- GTH CML
---        rx1_gth_p, rx1_gth_n: in std_logic -- GTH CML
---      );
---    end component;
+    component daphne_v3_1e_vio_0_0 is
+    port (
+        clk : in std_logic;
+        probe_out0 : out std_logic_vector ( 0 to 0 );
+        probe_out1 : out std_logic_vector ( 0 to 0 );
+        probe_out2 : out std_logic_vector ( 0 to 0 );
+        probe_out3 : out std_logic_vector ( 0 to 0 );
+        probe_out4 : out std_logic_vector ( 15 downto 0 )
+    );
+    end component daphne_v3_1e_vio_0_0;
+  
+    component endpoint
+    port (
+        sysclk_p : in std_logic;
+        sysclk_n : in std_logic;
+        reset_async : in std_logic;
+        sfp_tmg_los : in std_logic;
+        rx0_tmg_p : in std_logic;
+        rx0_tmg_n : in std_logic;
+        sfp_tmg_tx_dis : out std_logic;
+        tx0_tmg_p : out std_logic;
+        tx0_tmg_n : out std_logic;
+        ep_reset : in std_logic;
+        ep_addr : in std_logic_vector ( 15 downto 0 );
+        ep_ts_rdy : out std_logic;
+        ep_stat : out std_logic_vector ( 3 downto 0 );
+        mmcm1_reset : in std_logic;
+        mmcm1_locked : out std_logic;
+        mmcm0_locked : out std_logic;
+        use_ep : in std_logic;
+        mclk : out std_logic;
+        sclk200 : out std_logic;
+        sclk100 : out std_logic;
+        timestamp : out std_logic_vector ( 63 downto 0 );
+        
+        chip_clk_debug : out std_logic;
+        rx_tmg_debug : out std_logic;
+        tx_tmg_debug : out std_logic;
+        sfp_dis_debug : out std_logic;
+        sfp_los_debug : out std_logic
+    );
+    end component endpoint;
+
+    component daphne_v3_1e_ila_0_0 is
+    port (
+        clk : in std_logic;
+        probe0 : in std_logic_vector ( 0 to 0 );
+        probe1 : in std_logic_vector ( 3 downto 0 );
+        probe2 : in std_logic_vector ( 0 to 0 );
+        probe3 : in std_logic_vector ( 0 to 0 );
+        probe4 : in std_logic_vector ( 0 to 0 );
+        probe5 : in std_logic_vector ( 63 downto 0 );
+        probe6 : in std_logic_vector ( 0 to 0 );
+        probe7 : in std_logic_vector ( 0 to 0 );
+        probe8 : in std_logic_vector ( 0 to 0 );
+        probe9 : in std_logic_vector ( 0 to 0 );
+        probe10 : in std_logic_vector ( 0 to 0 );
+        probe11 : in std_logic_vector ( 0 to 0 );
+        probe12 : in std_logic_vector ( 0 to 0 )
+    );
+    end component daphne_v3_1e_ila_0_0;
+    
+    component daphne_v3_1e_zynq_ultra_ps_e_0_0 is
+    port (
+        pl_clk0 : out std_logic
+    );
+    end component daphne_v3_1e_zynq_ultra_ps_e_0_0;
+
+-- declare signals
+
+    signal pl_clk0 : STD_LOGIC;
+    signal mclk, sclk200, sclk100: std_logic;
 
     signal reset_async: std_logic;
-    signal reset_ep: std_logic;
+    signal ep_reset: std_logic;
+    signal mmcm1_reset: std_logic;
+
     signal use_ep: std_logic;
     signal ep_addr: std_logic_vector(15 downto 0);
     signal ep_stat: std_logic_vector(3 downto 0);
-    signal reset_mmcm1, mmcm1_locked, mmcm0_locked: std_logic;
-    signal mclk, sclk200: std_logic;
+    signal mmcm1_locked, mmcm0_locked: std_logic;
+
     signal timestamp: std_logic_vector(63 downto 0);
     signal ep_ts_rdy: std_logic;
 
@@ -128,116 +165,85 @@ architecture kria_test_arch of kria_test is
     signal edge_reg: std_logic;
     signal led_temp, led0_reg, led1_reg: std_logic_vector(3 downto 0);
 
+    signal chip_clk_debug : std_logic;
+    signal rx_tmg_debug : std_logic;
+    signal sfp_dis_debug : std_logic;
+    signal sfp_los_debug : std_logic;
+    signal tx_tmg_debug : std_logic;
+
 begin
 
-    -- New Timing Endpoint ------------------------------------------------------
+-- this clock comes from the Zynq PS side and it is always present
+-- what frequency is this anyway?
 
-    -- the timing endpoint logic includes some extra MMCMs to generate local system clocks too
+zynq_ultra_ps_e_0: DAPHNE_V3_1E_zynq_ultra_ps_e_0_0
+port map( pl_clk0 => pl_clk0 );
 
-    endpoint_inst: endpoint 
-    port map(
-        sysclk_p => sysclk_p,
-        sysclk_n => sysclk_n,
-        reset_async => reset_async,
-        sfp_tmg_los => sfp_tmg_los,
-        sfp_tmg_tx_dis => sfp_tmg_tx_dis,
-        tx0_tmg_p => tx0_tmg_p, 
-        tx0_tmg_n => tx0_tmg_n,
-        rx0_tmg_p => rx0_tmg_p,
-        rx0_tmg_n => rx0_tmg_n,
-        ep_reset => reset_ep,
-        ep_addr => ep_addr,
-        ep_ts_rdy => ep_ts_rdy,
-        ep_stat => ep_stat,
-        mmcm1_reset => reset_mmcm1,
-        mmcm1_locked => mmcm1_locked,
-        mmcm0_locked => mmcm0_locked,
-        use_ep => use_ep,
-        mclk => mclk,
-        sclk200 => sclk200,
-        timestamp => timestamp
+-- timing endpoint
+
+endpoint_inst: endpoint
+port map(
+      sysclk_n => sysclk_n,
+      sysclk_p => sysclk_p,
+      ep_addr => ep_addr,
+      ep_reset => ep_reset,
+      ep_stat => ep_stat,
+      ep_ts_rdy => ep_ts_rdy,
+      mclk => mclk,
+      mmcm0_locked => mmcm0_locked,
+      mmcm1_locked => mmcm1_locked,
+      mmcm1_reset => mmcm1_reset,
+      reset_async => reset_async,
+      rx0_tmg_n => rx0_tmg_n,
+      rx0_tmg_p => rx0_tmg_p,
+      sclk100 => sclk100,
+      sclk200 => sclk200,
+      sfp_tmg_los => sfp_tmg_los,
+      sfp_tmg_tx_dis => sfp_tmg_tx_dis,
+      timestamp => timestamp,
+      tx0_tmg_n => tx0_tmg_n,
+      tx0_tmg_p => tx0_tmg_p,
+      use_ep => use_ep,
+
+      rx_tmg_debug => rx_tmg_debug,
+      tx_tmg_debug => tx_tmg_debug,
+      chip_clk_debug => chip_clk_debug,
+      sfp_dis_debug => sfp_dis_debug,
+      sfp_los_debug => sfp_los_debug
     );
 
-    -- AXI Lite Interface to PS -----------------------------------------------
+ila_0: DAPHNE_V3_1E_ila_0_0
+port map (
+      clk => pl_clk0,
+      probe0(0) => ep_ts_rdy,
+      probe1(3 downto 0) => ep_stat(3 downto 0),
+      probe2(0) => mclk,
+      probe3(0) => sclk200,
+      probe4(0) => sclk100,
+      probe5(63 downto 0) => timestamp(63 downto 0),
+      probe6(0) => mmcm1_locked,
+      probe7(0) => mmcm0_locked,
+      probe8(0) => chip_clk_debug,
+      probe9(0) => rx_tmg_debug,
+      probe10(0) => tx_tmg_debug,
+      probe11(0) => sfp_dis_debug,
+      probe12(0) => sfp_los_debug
+    );
 
-        -- the AXI lite interface should have register(s) so that we can write (and read back): 
-        --      reset_async, ep_reset, mmcm1_reset
-        --      use_ep
-        --      ep_addr(15..0)
-    
-        -- the AXI lite interface should have register(s) so that we can read:
-        --      ep_ts_rdy, ep_stat(3..0)
-        --      sfp_tmg_los, sfp_tmg_abs
-        --      sfp_gth0_los, sfp_gth0_abs
-        --      sfp_gth1_los, sfp_gth1_abs
-        --      timestamp(63..0)
-        --      git commit id (passed in as generic at build time)
+vio_0: DAPHNE_V3_1E_vio_0_0
+port map (
+      clk => pl_clk0,
+      probe_out0(0) => reset_async,
+      probe_out1(0) => ep_reset,
+      probe_out2(0) => use_ep,
+      probe_out3(0) => mmcm1_reset,
+      probe_out4(15 downto 0) => ep_addr
+    );
 
+-- LED Blinker ------------------------------------------------------------
 
-    -- Fake Sender ------------------------------------------------------------
-
-    -- this module drives the two 10G optical output links to DAQ. for now
-    -- we will generate a periodic, fixed, repeating fake output record that
-    -- has a real time stamp. placeholder for now, still need to figure out what 
-    -- this custom IP block looks like. Developed by the Bristol (UK) guys.
-
---    sender_inst: sender
---    port map(
---        mclk => mclk,
---        reset => reset_async,
---        timestamp => timestamp,
---        gth_refclk0_p => gth_refclk0_p, -- 156.25MHz
---        gth_refclk0_n => gth_refclk0_n, 
---        sfp_gth0_los => sfp_gth0_los,
---        sfp_gth0_abs => sfp_gth0_abs,
---        sfp_gth0_tx_dis => sfp_gth0_tx_dis,
---        tx0_gth_p => tx0_gth_p,
---        tx0_gth_n => tx0_gth_n,
---        rx0_gth_p => rx0_gth_p,
---        rx0_gth_n => rx0_gth_n,
---        sfp_gth1_los => sfp_gth1_los,
---        sfp_gth1_abs => sfp_gth1_abs,
---        sfp_gth1_tx_dis => sfp_gth1_tx_dis,
---        tx1_gth_p => tx1_gth_p,
---        tx1_gth_n => tx1_gth_n,
---        rx1_gth_p => rx1_gth_p,
---        rx1_gth_n => rx1_gth_n
---      );
-
-    -- I2C Master ------------------------------------------------------------
-
-    -- this I2C master controls a the PL I2C bus this bus communicates with:
-    --
-    --  I2C fanout mux/buffer TCA9546APWR 
-    --      This active mux is controlled by writing to address 113. 
-    --      It selects which SFP is connected. This is optional 
-    --      for now and not needed at this time.
-    --
-    --  Clock Generator SI5332B
-    --      This device is at address 106. We will need to write to this 
-    --      device to configure it to generate the clock frequencies we 
-    --      need: OUT1 = 100MHz LVDS, OUT3 = 156.25MHz LVDS
-    --      (OUT0 and OUT2 are not used)
-    
-    -- (is this another axi lite interface?)
-    
-
-
-
-
-    -- SPI Master for DACs ---------------------------------------------------
-
-    -- this SPI master is used to write to the DAC chips, which can generate
-    -- eight analog voltages. this is optional for now.
-
-    --dac_spi_sclk <= '0';
-    --dac_spi_syncn <= '1';
-    --dac_spi_ldacn <= '1';
-
-    -- LED Blinker ------------------------------------------------------------
-
-	led_temp(0) <= mmcm1_locked;
-    led_temp(1) <= mmcm0_locked;
+	led_temp(0) <= mmcm0_locked;
+    led_temp(1) <= mmcm1_locked;
 	led_temp(2) <= ep_ts_rdy; -- timestamp is valid
 	led_temp(3) <= '1' when (ep_stat="1000") else '0'; -- endpoint status "good to go!"
 
@@ -269,7 +275,7 @@ begin
         end if;
     end process oneshot_proc;
    
-    -- Kria_Test LEDs are ACTIVE LOW
+    -- Kria_Test PL status LEDs are ACTIVE LOW!
 
     pl_stat_led <= not led1_reg;
 

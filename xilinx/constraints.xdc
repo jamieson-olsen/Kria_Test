@@ -11,7 +11,6 @@
 
 create_clock -name rx0_tmg_clk  -period 16.000  [get_ports rx0_tmg_p] ;# 62.5MHz timing endpoint clock
 create_clock -name sysclk       -period 10.000  [get_ports sysclk_p] ;# 100MHz system clock
-#create_clock -name gth_refclk   -period 6.400   [get_ports gth0_refclk_p] ;# 156.25MHz GTH 10G clock
 
 # rename the auto-generated clocks...
 
@@ -40,12 +39,6 @@ set_clock_groups -name async_groups -asynchronous \
 -group {sysclk sclk100 mmcm0_clkfbout} -group {sclk200} -group {local_clk62p5} \
 -group {mclk0 mmcm1_clkfbout0} -group {mclk1 mmcm1_clkfbout1} \
 -group {ep_clk62p5 ep_clk4x ep_clk2x ep_clkfbout} -group {rx0_tmg_clk} 
-
-# tell Vivado about places where signals cross clock domains so timing can be ignored here...
-#set_false_path -from [get_pins fe_inst/gen_afe[*].afe_inst/auto_fsm_inst/done_reg_reg/C]      
-#set_false_path -from [get_pins fe_inst/gen_afe[*].afe_inst/auto_fsm_inst/warn_reg_reg/C]      
-#set_false_path -from [get_pins fe_inst/gen_afe[*].afe_inst/auto_fsm_inst/errcnt_reg_reg[*]/C] 
-
 
 # #############################################################################
 # Pin LOCation and IOSTANDARD Constraints
@@ -146,7 +139,7 @@ set_property IOSTANDARD LVTTL [get_ports {pl_stat_led[?]}]
 # General bitstream constraints...
 # need to double check these for Kria Zynq Ultrascale+
 
-set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
-set_property CFGBVS VCCO [current_design]
-set_property CONFIG_VOLTAGE 3.3 [current_design]
+#set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
+#set_property CFGBVS VCCO [current_design]
+#set_property CONFIG_VOLTAGE 3.3 [current_design]
 

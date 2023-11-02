@@ -21,7 +21,7 @@ use unisim.vcomponents.all;
 entity endpoint is
 port(
 
-    sysclk_p, sysclk_n: in std_logic; -- system clock LVDS 100MHz from local oscillator
+   sysclk_p, sysclk_n: in std_logic; -- system clock LVDS 100MHz from local oscillator
     reset_async: in std_logic; -- async hard reset from the PS
 
     -- external optical timing SFP link interface
@@ -48,8 +48,16 @@ port(
 
     mclk: out std_logic;  -- master clock 62.5MHz
     sclk200: out std_logic; -- system clock 200MHz
-    --sclk100: out std_logic; -- system clock 100MHz
-
+    sclk100: out std_logic; -- system clock 100MHz
+    
+    
+    -- debug signals
+    chip_clk_debug: out std_logic ;
+    rx_tmg_debug: out std_logic ;
+    tx_tmg_debug: out std_logic ;
+    sfp_dis_debug: out std_logic ;
+    sfp_los_debug: out std_logic ;
+    
     timestamp: out std_logic_vector(63 downto 0) -- sync to mclk
 
   );
@@ -92,12 +100,22 @@ signal mclk_i: std_logic;
 
 signal real_timestamp, fake_timestamp, timestamp_reg: std_logic_vector(63 downto 0);
 
+
+-- debug signals
+
+
+ signal   chip_clk_debug_buff:  std_logic ;
+signal rx_tmg_debug_buff:  std_logic ;
+signal tx_tmg_debug_buff:  std_logic ;
+signal sfp_dis_debug_buff:  std_logic ;
+signal sfp_los_debug_buff:  std_logic ;
+
 begin
 
 -- sysclk is 100MHz LVDS, receive it with IBUFDS. sysclk comes in on bank 33
 -- which has VCCO=1.5V. IOSTANDARD is LVDS and the termination resistor is external (DIFF_TERM=FALSE)
 
-sysclk_ibufds_inst : IBUFGDS port map(O => sysclk_ibuf, I => sysclk_p, IB => sysclk_n);
+sclk_ibufds_inst : IBUFGDS port map(O => sysclk_ibuf, I => sysclk_p, IB => sysclk_n);
 
 mmcm0_inst: MMCME2_ADV
 generic map(
@@ -111,44 +129,44 @@ generic map(
     CLKFBOUT_USE_FINE_PS => FALSE,
     CLKOUT0_DIVIDE_F     => 16.000, -- CLKOUT0 = 62.5MHz
     CLKOUT0_PHASE        => 0.000,
-    CLKOUT0_DUTY_CYCLE   => 0.500,
+   CLKOUT0_DUTY_CYCLE   => 0.500,
     CLKOUT0_USE_FINE_PS  => FALSE,
     CLKOUT1_DIVIDE       => 5, -- CLKOUT1 = 200MHz
-    CLKOUT1_PHASE        => 0.000,
+  CLKOUT1_PHASE        => 0.000,
     CLKOUT1_DUTY_CYCLE   => 0.500,
     CLKOUT1_USE_FINE_PS  => FALSE,
     CLKOUT2_DIVIDE       => 10, -- CLKOUT2 = 100MHz
     CLKOUT2_PHASE        => 0.000,
     CLKOUT2_DUTY_CYCLE   => 0.500,
-    CLKOUT2_USE_FINE_PS  => FALSE,
+   CLKOUT2_USE_FINE_PS  => FALSE,
     CLKIN1_PERIOD        => 10.000 -- 100MHz system clock input
 )
 port map(
     CLKFBOUT            => mmcm0_clkfbout,
     CLKFBOUTB           => open,
-    CLKOUT0             => mmcm0_clkout0, -- 62.5MHz
+   CLKOUT0             => mmcm0_clkout0, -- 62.5MHz
     CLKOUT0B            => open,
     CLKOUT1             => mmcm0_clkout1, -- 200MHz
-    CLKOUT1B            => open,
+  CLKOUT1B            => open,
     CLKOUT2             => mmcm0_clkout2, -- 100MHz
-    CLKOUT2B            => open,     
-    CLKOUT3             => open, 
+  CLKOUT2B            => open,     
+   CLKOUT3             => open, 
     CLKOUT3B            => open,
-    CLKOUT4             => open,
+   CLKOUT4             => open,
     CLKOUT5             => open,
     CLKOUT6             => open,
     CLKFBIN             => mmcm0_clkfbout_buf,
     CLKIN1              => sysclk_ibuf,
     CLKIN2              => '0',
-    CLKINSEL            => '1', -- high to use CLKIN1
+   CLKINSEL            => '1', -- high to use CLKIN1
     DADDR               => (others=>'0'),
     DCLK                => '0',
-    DEN                 => '0',
+   DEN                 => '0',
     DI                  => (others=>'0'),
-    DO                  => open,
-    DRDY                => open,
-    DWE                 => '0',
-    PSCLK               => '0',
+   DO                  => open,
+   DRDY                => open,
+  DWE                 => '0',
+   PSCLK               => '0',
     PSEN                => '0',
     PSINCDEC            => '0',
     PSDONE              => open,
@@ -167,7 +185,7 @@ mmcm0_clk1_inst:  BUFG port map( I => mmcm0_clkout1, O => sclk200); -- system cl
 
 mmcm_clk2_inst:  BUFG port map( I => mmcm0_clkout2, O => sclk100_i);  -- system clock 100MHz
 
--- sclk100 <= sclk100_i;
+ sclk100 <= sclk100_i;
 
 -- DATA OUT from ADN2814 chip is the modulated clock
 
@@ -188,7 +206,7 @@ pdts_endpoint_inst: pdts_endpoint_wrapper
 		los => sfp_tmg_los,
 		rxd => rx0_tmg, -- NEW: get the modulated clock from the external CDR DATA output
 		txd => tx0_tmg, 
-		txenb => sfp_tmg_tx_dis, -- Timing output enable (active low for SFP) (clk domain)
+		txenb => sfp_dis_debug_buff, -- Timing output enable (active low for SFP) (clk domain)
 		clk => ep_clk62p5, -- output clock from endpoint 62.5MHz
 		rst => open, -- endpoint reset output not used here
 		ready => ep_ts_rdy,
@@ -267,7 +285,7 @@ port map(
 
 mmcm1_clkfb_inst: BUFG port map( I => mmcm1_clkfbout, O => mmcm1_clkfbout_buf);
 
--- mmcm1_clk0_inst:  BUFG port map( I => mmcm1_clkout0, O => fclk); -- fast clock 437.5MHz for front end logic
+ --mmcm1_clk0_inst:  BUFG port map( I => mmcm1_clkout0, O => fclk); -- fast clock 437.5MHz for front end logic
 
 mmcm1_clk1_inst:  BUFG port map( I => mmcm1_clkout1, O => mclk_i); -- master clock 62.5MHz
 
@@ -305,5 +323,22 @@ begin
 end process ts_proc;
 
 timestamp <= timestamp_reg;
+
+chip_clk_debug_buff <=  sysclk_ibuf ;
+rx_tmg_debug_buff <=  rx0_tmg ;
+ tx_tmg_debug_buff <= tx0_tmg  ;
+ sfp_tmg_tx_dis  <=  sfp_dis_debug_buff ;
+ sfp_los_debug_buff <=  sfp_tmg_los ;
+
+
+
+    chip_clk_debug <= chip_clk_debug_buff;
+    rx_tmg_debug <= rx_tmg_debug_buff;
+    tx_tmg_debug <= tx_tmg_debug_buff;
+    sfp_dis_debug <= sfp_dis_debug_buff;
+    sfp_los_debug <= sfp_los_debug_buff;
+
+
+
 
 end endpoint_arch;

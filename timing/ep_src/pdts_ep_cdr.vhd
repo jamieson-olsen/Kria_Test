@@ -76,15 +76,16 @@ begin
 			o => bclk_f
 	);
 	
-	oddr_rclko: ODDR -- Feedback clock, not through MMCM
+	oddr_rclko: ODDRE1 -- Feedback clock, not through MMCM
 		port map(
 			q => rclko,
 			c => bclk_f,
-			ce => '1',
+--			ce => '1',
 			d1 => '0',
 			d2 => '1',
-			r => '0',
-			s => '0'
+			SR=>'0'
+--			r => '0',
+--			s => '0'
 		);
 
 -- PLL
