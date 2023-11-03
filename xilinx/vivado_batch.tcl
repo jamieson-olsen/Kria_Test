@@ -9,6 +9,7 @@ set_param general.maxThreads 4
 set outputDir ./output
 file mkdir $outputDir
 set_part xck26-sfvc784-2LV-c
+#set_board_part k26
 
 # load the VHDL sources...
 
@@ -113,10 +114,9 @@ report_io -file $outputDir/io.rpt
 #write_xdc -no_fixed_only -force $outputDir/bft_impl.xdc
 
 # generate bitstream...
+write_bitstream -force -bin_file $outputDir/kriatest_$git_sha.bit
 
-write_bitstream -force -bin_file $outputDir/daphne2_$git_sha.bit
-
-# write out ILA debug probes file
+# optional write out ILA debug probes file
 write_debug_probes -force $outputDir/probes.ltx
 
 exit
